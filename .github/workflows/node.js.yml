@@ -1,82 +1,77 @@
-name: Node.js CI Pipeline
-
-on:
-  push:
-    branches: [ main ]
-
-jobs:
-
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
-
-      # 1. Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # 2. Setup Node.js
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      # 3. Check Node.js and npm
-      - name: Check Node.js and npm
-        run: |
-          node -v
-          npm -v
-
-      # 4. Install dependencies
-      - name: Install dependencies
-        run: npm ci
-
-      # 5. Run tests
-      - name: Run tests
-        run: npm test
-
-      # 6. SonarQube Analysis
-      - name: SonarQube Analysis
-        env:
-          SONAR_HOST: ${{ secrets.SONAR_HOST }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          set -e
-
-          echo "=========================================="
-          echo "SonarQube Analysis"
-          echo "=========================================="
-
-          echo "SonarQube server: $SONAR_HOST"
-
-          echo "Checking SonarQube server..."
-          curl -f -I "$SONAR_HOST"
-
-          echo "Running SonarQube analysis..."
-
-          npx --yes sonar-scanner \
-            -Dsonar.projectKey=nodejs-application \
-            -Dsonar.sources=. \
-            -Dsonar.host.url="$SONAR_HOST" \
-            -Dsonar.token="$SONAR_TOKEN"
-
-      # 7. Build application
-      - name: Build application
-        run: npm run build
-
-      # 8. Verify build output
-      - name: Verify build output
-        run: |
-          echo "Build directory:"
-          ls -la
-
-          echo "Dist directory:"
-          ls -la dist
-
-      # 9. Upload application artifact
-      - name: Upload application artifact
-        uses: actions/upload-artifact@v4
+      # 1. Download artifact
+      - name: Download application artifact
+        uses: actions/download-artifact@v4
         with:
           name: nodejs-app
-          path: dist/
+          path: app
+
+      # 2. Check artifact
+      - name: Check artifact
+        run: |
+          echo "Downloaded application:"
+          ls -la app
+
+      # 3. Setup SSH
+      - name: Setup SSH
+        env:
+          EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          mkdir -p ~/.ssh
+
+          echo "$EC2_SSH_KEY" > ~/.ssh/ec2-key.pem
+
+          chmod 600 ~/.ssh/ec2-key.pem
+
+          ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      # 4. Create application directory
+      - name: Prepare EC2
+        run: |
+          ssh -i ~/.ssh/ec2-key.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
+            "mkdir -p ~/nodejs-app"
+
+      # 5. Copy application
+      - name: Copy application to EC2
+        run: |
+          scp -i ~/.ssh/ec2-key.pem \
+            -r app/* \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/nodejs-app/
+
+      # 6. Install dependencies and start application
+      - name: Deploy Node.js application
+        run: |
+          ssh -i ~/.ssh/ec2-key.pem \
+            ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
+
+            cd ~/nodejs-app
+
+            echo "Installing production dependencies..."
+            npm ci --omit=dev
+
+            echo "Starting application with PM2..."
+
+            pm2 delete nodejs-app || true
+
+            pm2 start server.js --name nodejs-app
+
+            pm2 save
+
+            echo "Deployment completed."
+
+            pm2 status
+
+          EOF
+
+      # 7. Health check
+      - name: Health check
+        run: |
+          sleep 5
+
+          curl -f http://${{ secrets.EC2_HOST }}:3000/health
