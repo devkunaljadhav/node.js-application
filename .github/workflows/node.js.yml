@@ -40,7 +40,15 @@ jobs:
       - name: Build application
         run: npm run build
 
-      # 7. Upload artifact
+      # 7. Verify build output
+      - name: Verify build output
+        run: |
+          echo "Build directory:"
+          ls -la
+          echo "Dist directory:"
+          ls -la dist
+
+      # 8. Upload application artifact
       - name: Upload application artifact
         uses: actions/upload-artifact@v4
         with:
