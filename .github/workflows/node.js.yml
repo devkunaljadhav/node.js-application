@@ -1,3 +1,4 @@
+
 name: Node.js CI Pipeline
 
 on:
@@ -35,12 +36,31 @@ jobs:
       # 5. Run tests
       - name: Run tests
         run: npm test
+	
+      # 6. SonarQube Analysis
+      - name: SonarQube Analysis
+        env:
+          SONAR_HOST: ${{ secrets.SONAR_HOST }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          echo "SonarQube server: $SONAR_HOST"
 
-      # 6. Build application
+          echo "Checking SonarQube server..."
+          curl -f -I "$SONAR_HOST"
+
+          echo "Running SonarQube analysis..."
+
+          npx sonar-scanner \
+            -Dsonar.projectKey=nodejs-application \
+            -Dsonar.sources=. \
+            -Dsonar.host.url="$SONAR_HOST" \
+            -Dsonar.token="$SONAR_TOKEN"
+
+      # 7. Build application
       - name: Build application
         run: npm run build
 
-      # 7. Verify build output
+      # 8. Verify build output
       - name: Verify build output
         run: |
           echo "Build directory:"
@@ -48,7 +68,7 @@ jobs:
           echo "Dist directory:"
           ls -la dist
 
-      # 8. Upload application artifact
+      # 9. Upload application artifact
       - name: Upload application artifact
         uses: actions/upload-artifact@v4
         with:
