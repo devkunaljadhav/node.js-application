@@ -22,11 +22,11 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      # 3. Check versions
+      # 3. Check Node.js and npm
       - name: Check Node.js and npm
         run: |
-          node --version
-          npm --version
+          node -v
+          npm -v
 
       # 4. Install dependencies
       - name: Install dependencies
@@ -38,14 +38,11 @@ jobs:
 
       # 6. Build application
       - name: Build application
-        run: npm run build --if-present
+        run: npm run build
 
       # 7. Upload artifact
-      - name: Upload Node.js artifact
+      - name: Upload application artifact
         uses: actions/upload-artifact@v4
         with:
           name: nodejs-app
-          path: |
-            .
-            !node_modules
-            !.git
+          path: dist/
