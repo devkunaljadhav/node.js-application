@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BOOM.COM | Next-Gen Tech & Gaming E-Commerce</title>
+  <meta name="description" content="Shop ultra-high performance gaming gear, gadgets, and next-gen hardware at BOOM.COM.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Announcement Bar -->
+  <div class="top-banner">
+    <span>💥 <strong>BOOM FLASH SALE:</strong> Use code <mark class="promo-pill">BOOM20</mark> for 20% OFF! Free Worldwide Express Delivery 💥</span>
+  </div>
+
+  <!-- Main Navigation -->
+  <header class="navbar">
+    <div class="nav-container">
+      <a href="/" class="brand-logo" id="logo-link">
+        <span class="logo-symbol">💥</span>
+        <span class="logo-text">BOOM<span class="logo-accent">.COM</span></span>
+      </a>
+
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Search laptops, headphones, keyboards..." autocomplete="off">
+        <button id="clear-search" class="clear-btn" style="display: none;">✕</button>
+      </div>
+
+      <!-- Right Nav Actions -->
+      <div class="nav-actions">
+        <div class="server-status-pill" id="health-pill" title="CI/CD Health Check Status">
+          <span class="pulse-dot"></span>
+          <span id="health-status-text">HEALTH: UP</span>
+        </div>
+
+        <button class="cart-trigger-btn" id="open-cart-btn" aria-label="Open Shopping Cart">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-label">Cart</span>
+          <span class="cart-count-badge" id="cart-count">0</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero-section">
+    <div class="hero-glow"></div>
+    <div class="hero-content">
+      <div class="hero-tag">💥 EXPLOSIVE TECH DEALS</div>
+      <h1 class="hero-title">UNLEASH PEAK PERFORMANCE</h1>
+      <p class="hero-subtitle">Equip yourself with elite gaming laptops, spatial audio, and cyber peripherals engineered for supremacy.</p>
+      <div class="hero-cta-group">
+        <a href="#products-section" class="btn btn-primary" id="explore-btn">Shop The Drop</a>
+        <button class="btn btn-secondary" id="coupon-copy-btn">Claim 20% OFF (BOOM20)</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Store Content -->
+  <main class="store-container" id="products-section">
+    <!-- Filters & Category Navigation -->
+    <div class="filters-bar">
+      <div class="category-tabs" id="category-tabs">
+        <button class="tab-btn active" data-category="All">All Items</button>
+        <button class="tab-btn" data-category="Gaming">Gaming</button>
+        <button class="tab-btn" data-category="Audio">Audio</button>
+        <button class="tab-btn" data-category="Wearables">Wearables</button>
+        <button class="tab-btn" data-category="Monitors">Monitors</button>
+        <button class="tab-btn" data-category="Accessories">Accessories</button>
+      </div>
+
+      <div class="sort-wrapper">
+        <label for="sort-select">Sort by:</label>
+        <select id="sort-select" class="custom-select">
+          <option value="popular">Most Popular</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="rating">Highest Rated</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Product Grid -->
+    <div class="product-grid" id="product-grid">
+      <div class="loading-spinner">Loading BOOM products...</div>
+    </div>
+  </main>
+
+  <!-- Slide-out Cart Drawer -->
+  <div class="cart-backdrop" id="cart-backdrop"></div>
+  <aside class="cart-drawer" id="cart-drawer">
+    <div class="cart-header">
+      <div class="cart-title-row">
+        <h2>Your Cart</h2>
+        <span class="cart-items-counter" id="cart-items-summary">(0 items)</span>
+      </div>
+      <button class="close-cart-btn" id="close-cart-btn" aria-label="Close Cart">✕</button>
+    </div>
+
+    <!-- Cart Items List -->
+    <div class="cart-items-container" id="cart-items-list">
+      <div class="empty-cart-msg" id="empty-cart-msg">
+        <div class="empty-icon">🛒</div>
+        <p>Your BOOM cart is empty.</p>
+        <button class="btn btn-secondary btn-sm" id="shop-now-btn">Explore Deals</button>
+      </div>
+    </div>
+
+    <!-- Cart Footer / Summary -->
+    <div class="cart-footer" id="cart-footer">
+      <div class="promo-box">
+        <input type="text" id="promo-input" placeholder="Promo code (e.g. BOOM20)" uppercase>
+        <button id="apply-promo-btn" class="btn btn-secondary btn-sm">Apply</button>
+      </div>
+      <div id="promo-msg" class="promo-msg"></div>
+
+      <div class="price-breakdown">
+        <div class="price-row">
+          <span>Subtotal</span>
+          <span id="cart-subtotal">$0.00</span>
+        </div>
+        <div class="price-row" id="discount-row" style="display: none; color: #22c55e;">
+          <span>Discount (<span id="discount-percent">0%</span>)</span>
+          <span id="cart-discount">-$0.00</span>
+        </div>
+        <div class="price-row">
+          <span>Shipping</span>
+          <span class="free-shipping">FREE</span>
+        </div>
+        <div class="price-row total-row">
+          <span>Total</span>
+          <span id="cart-total">$0.00</span>
+        </div>
+      </div>
+
+      <button class="btn btn-primary checkout-btn" id="checkout-btn">
+        <span>Proceed to Checkout</span>
+        <span class="checkout-arrow">→</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Checkout Success Modal -->
+  <div class="modal-backdrop" id="modal-backdrop">
+    <div class="checkout-modal">
+      <div class="modal-header">
+        <div class="success-icon">✓</div>
+        <h2>Order Confirmed!</h2>
+        <p>Thank you for shopping at <strong>BOOM.COM</strong></p>
+      </div>
+      <div class="modal-body">
+        <div class="order-receipt">
+          <div class="receipt-row">
+            <span>Order ID:</span>
+            <strong id="modal-order-id">BOOM-892415</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Status:</span>
+            <span class="order-badge">PAID & DISPATCHED</span>
+          </div>
+          <div class="receipt-row">
+            <span>Amount Paid:</span>
+            <strong id="modal-order-total">$0.00</strong>
+          </div>
+          <div class="receipt-row">
+            <span>Delivery:</span>
+            <span>Express Courier (1-2 Days)</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary" id="modal-close-btn">Continue Shopping</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="footer-container">
+      <div class="footer-col">
+        <div class="brand-logo footer-logo">
+          <span class="logo-symbol">💥</span>
+          <span class="logo-text">BOOM<span class="logo-accent">.COM</span></span>
+        </div>
+        <p class="footer-desc">The ultimate e-commerce destination for hardcore tech, next-gen hardware, and gaming peripherals.</p>
+        <div class="devops-badge">
+          <span>CI/CD Pipeline: Active</span>
+          <span>•</span>
+          <span>Node.js v20 • Express</span>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h3>Categories</h3>
+        <ul>
+          <li><a href="#products-section">Gaming Laptops</a></li>
+          <li><a href="#products-section">Spatial Audio</a></li>
+          <li><a href="#products-section">Mechanical Keyboards</a></li>
+          <li><a href="#products-section">4K Displays</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h3>DevOps Endpoints</h3>
+        <ul>
+          <li><a href="/health" target="_blank">/health (HTTP 200)</a></li>
+          <li><a href="/api/users" target="_blank">/api/users (JSON)</a></li>
+          <li><a href="/api/products" target="_blank">/api/products</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 BOOM.COM Store. All Rights Reserved. Built for DevOps & CI/CD Excellence.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

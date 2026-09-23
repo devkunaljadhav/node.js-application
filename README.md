@@ -1,6 +1,6 @@
-# nodejs-cicd-app
+# nodejs-cicd-app (BOOM.COM E-Commerce)
 
-A clean, minimalist Node.js and Express REST API designed specifically for practicing **DevOps & CI/CD workflows** with **GitHub Actions**, self-hosted runners, SonarQube, PM2, and Amazon Linux 2023.
+A clean, modern Node.js and Express REST API & E-Commerce Web Application (**BOOM.COM**) designed specifically for practicing **DevOps & CI/CD workflows** with **GitHub Actions**, self-hosted runners, SonarQube, PM2, and Amazon Linux 2023.
 
 ---
 

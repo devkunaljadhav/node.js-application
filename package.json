@@ -1,0 +1,36 @@
+{
+  "name": "nodejs-cicd-app",
+  "version": "1.0.0",
+  "description": "A simple Node.js application for practicing GitHub Actions CI/CD pipelines",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "jest",
+    "build": "npm test"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "cicd",
+    "github-actions",
+    "jest",
+    "supertest",
+    "devops"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "supertest": "^7.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/"
+    ]
+  }
+}
