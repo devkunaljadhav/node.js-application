@@ -1,8 +1,117 @@
+name: Node.js CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+
+  # ==========================================================
+  # STAGE 1: BUILD + TEST + SONARQUBE + ARTIFACT
+  # ==========================================================
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      # 1. Checkout source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # 3. Check Node.js and npm
+      - name: Check Node.js and npm
+        run: |
+          node -v
+          npm -v
+
+      # 4. Install dependencies
+      - name: Install dependencies
+        run: npm ci
+
+      # 5. Run tests
+      - name: Run tests
+        run: npm test
+
+      # ======================================================
+      # SONARQUBE
+      # ======================================================
+
+      # 6. SonarQube Analysis
+      - name: SonarQube Analysis
+        env:
+          SONAR_HOST: ${{ secrets.SONAR_HOST }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+        run: |
+          set -e
+
+          echo "=========================================="
+          echo "SonarQube Analysis"
+          echo "=========================================="
+
+          echo "SonarQube server: $SONAR_HOST"
+
+          echo "Checking SonarQube server..."
+
+          curl -f -I "$SONAR_HOST"
+
+          echo "Running SonarQube analysis..."
+
+          npx --yes sonar-scanner \
+            -Dsonar.projectKey=nodejs-application \
+            -Dsonar.sources=. \
+            -Dsonar.host.url="$SONAR_HOST" \
+            -Dsonar.token="$SONAR_TOKEN"
+
+          echo "SonarQube analysis completed successfully."
+
+      # ======================================================
+      # BUILD
+      # ======================================================
+
+      # 7. Build application
+      - name: Build application
+        run: npm run build
+
+      # 8. Verify build output
+      - name: Verify build output
+        run: |
+          echo "=========================================="
+          echo "Build Output"
+          echo "=========================================="
+
+          ls -la
+
+          echo "Dist directory:"
+          ls -la dist
+
+      # 9. Upload application artifact
+      - name: Upload application artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nodejs-app
+          path: dist/
+
+
+  # ==========================================================
+  # STAGE 2: DEPLOY TO EC2
+  # ==========================================================
+
   deploy:
     runs-on: ubuntu-latest
+
     needs: build
 
     steps:
+
       # 1. Download artifact
       - name: Download application artifact
         uses: actions/download-artifact@v4
@@ -10,18 +119,30 @@
           name: nodejs-app
           path: app
 
-      # 2. Check artifact
-      - name: Check artifact
+      # 2. Verify downloaded artifact
+      - name: Check downloaded artifact
         run: |
-          echo "Downloaded application:"
+          echo "=========================================="
+          echo "Downloaded Application"
+          echo "=========================================="
+
           ls -la app
+
+      # ======================================================
+      # SSH SETUP
+      # ======================================================
 
       # 3. Setup SSH
       - name: Setup SSH
         env:
           EC2_SSH_KEY: ${{ secrets.EC2_SSH_KEY }}
           EC2_HOST: ${{ secrets.EC2_HOST }}
+
         run: |
+          set -e
+
+          echo "Setting up SSH..."
+
           mkdir -p ~/.ssh
 
           echo "$EC2_SSH_KEY" > ~/.ssh/ec2-key.pem
@@ -30,48 +151,99 @@
 
           ssh-keyscan -H "$EC2_HOST" >> ~/.ssh/known_hosts
 
+          echo "SSH setup completed."
+
+      # ======================================================
+      # PREPARE EC2
+      # ======================================================
+
       # 4. Create application directory
-      - name: Prepare EC2
+      - name: Prepare EC2 server
         run: |
           ssh -i ~/.ssh/ec2-key.pem \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} \
             "mkdir -p ~/nodejs-app"
 
-      # 5. Copy application
+      # ======================================================
+      # COPY APPLICATION
+      # ======================================================
+
+      # 5. Copy artifact to EC2
       - name: Copy application to EC2
         run: |
+          echo "Copying application to EC2..."
+
           scp -i ~/.ssh/ec2-key.pem \
             -r app/* \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/nodejs-app/
 
-      # 6. Install dependencies and start application
+          echo "Application copied successfully."
+
+      # ======================================================
+      # DEPLOY USING PM2
+      # ======================================================
+
+      # 6. Deploy Node.js application
       - name: Deploy Node.js application
         run: |
           ssh -i ~/.ssh/ec2-key.pem \
             ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} << 'EOF'
 
+            set -e
+
+            echo "=========================================="
+            echo "Node.js Deployment"
+            echo "=========================================="
+
             cd ~/nodejs-app
 
+            echo "Current directory:"
+            pwd
+
+            echo "Application files:"
+            ls -la
+
             echo "Installing production dependencies..."
+
             npm ci --omit=dev
 
-            echo "Starting application with PM2..."
+            echo "Stopping old PM2 application if exists..."
 
             pm2 delete nodejs-app || true
 
+            echo "Starting Node.js application..."
+
             pm2 start server.js --name nodejs-app
+
+            echo "Saving PM2 process..."
 
             pm2 save
 
-            echo "Deployment completed."
+            echo "=========================================="
+            echo "PM2 Status"
+            echo "=========================================="
 
             pm2 status
 
+            echo "Deployment completed successfully."
+
           EOF
 
-      # 7. Health check
+      # ======================================================
+      # HEALTH CHECK
+      # ======================================================
+
+      # 7. Check application
       - name: Health check
         run: |
+          echo "Waiting for application to start..."
+
           sleep 5
 
+          echo "Checking Node.js application..."
+
           curl -f http://${{ secrets.EC2_HOST }}:3000/health
+
+          echo "=========================================="
+          echo "Application is healthy!"
+          echo "=========================================="
