@@ -35,13 +35,19 @@ jobs:
       # 5. Run tests
       - name: Run tests
         run: npm test
-	
+
       # 6. SonarQube Analysis
       - name: SonarQube Analysis
         env:
           SONAR_HOST: ${{ secrets.SONAR_HOST }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
+          set -e
+
+          echo "=========================================="
+          echo "SonarQube Analysis"
+          echo "=========================================="
+
           echo "SonarQube server: $SONAR_HOST"
 
           echo "Checking SonarQube server..."
@@ -49,7 +55,7 @@ jobs:
 
           echo "Running SonarQube analysis..."
 
-          npx sonar-scanner \
+          npx --yes sonar-scanner \
             -Dsonar.projectKey=nodejs-application \
             -Dsonar.sources=. \
             -Dsonar.host.url="$SONAR_HOST" \
@@ -64,6 +70,7 @@ jobs:
         run: |
           echo "Build directory:"
           ls -la
+
           echo "Dist directory:"
           ls -la dist
 
